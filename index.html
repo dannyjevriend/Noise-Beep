@@ -75,13 +75,11 @@
         <div class="absolute bottom-4 text-zinc-600 font-mono text-[10px] tracking-widest">
             2026 Cline/oMLX/QWEN testje door Dannyjevriend.com
         </div>
-        <div class="relative">
+        <div class="relative w-full max-w-[320px] aspect-square">
             <!-- SVG Radial Dial -->
             <svg 
                 id="radialDial"
-                class="cursor-ns-resize select-none drop-shadow-2xl"
-                width="320" 
-                height="320" 
+                class="cursor-ns-resize select-none drop-shadow-2xl w-full h-full"
                 viewBox="0 0 320 320"
                 role="slider"
                 aria-label="Noise to Beep dial"
@@ -372,6 +370,24 @@
         window.addEventListener('mousedown', handleMouseDown);
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
+
+        // Touch support
+        window.addEventListener('touchstart', (e) => {
+            // Support both mouse and touch
+            if (e.touches.length > 0) {
+                handleMouseDown({ clientY: e.touches[0].clientY });
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length > 0) {
+                handleMouseMove({ clientY: e.touches[0].clientY });
+                // Prevent scrolling when interacting with the dial
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', handleMouseUp);
 
         // Initialize
         updateDialUI();
