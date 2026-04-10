@@ -188,9 +188,26 @@
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContextClass({ latencyHint: 'interactive' });
                 
-                // Immediately resume for iOS - MUST be done before creating nodes
+                // Check if AudioContext is running, suspended, or closed
+                console.log('AudioContext state:', audioCtx.state);
+
+                // Check for iOS silent mode
                 if (audioCtx.state === 'suspended') {
+                    // Try to resume
                     await audioCtx.resume();
+                    
+                    // If still suspended after resume attempt, silent mode is enabled
+                    if (audioCtx.state === 'suspended') {
+                        // Silent mode is engaged
+                        muteBtn.textContent = 'ENABLE SILENT MODE';
+                        muteBtn.style.borderColor = 'var(--zinc-600)';
+                        muteBtn.style.color = '#f9f4f4';
+                        muteBtn.style.opacity = '1';
+                        muteBtn.style.pointerEvents = 'auto';
+                        
+                        alert('iOS Silent Mode Detected:\n\nPlease turn OFF the Ringtone/Silent switch on your device.\n\nThe hardware switch on the left side of your iPhone controls this.');
+                        return;
+                    }
                 }
 
                 masterGain = audioCtx.createGain();
@@ -234,6 +251,9 @@
                 updateAudio();
             } catch (e) {
                 console.error('Audio init error:', e);
+                muteBtn.textContent = 'AUDIO STARTED';
+                muteBtn.style.opacity = '0';
+                muteBtn.style.pointerEvents = 'none';
             }
         }
 
@@ -327,12 +347,12 @@
         muteBtn.addEventListener('click', async () => {
             await initAudio();
             
-            // The UI updates are now handled inside initAudio or after it completes
-            muteBtn.textContent = 'AUDIO STARTED';
-            muteBtn.style.opacity = '0';
-            muteBtn.style.pointerEvents = 'none';
-            
-            updateAudio();
+            // If audio started successfully, hide button
+            if (isAudioStarted) {
+                muteBtn.textContent = 'AUDIO STARTED';
+                muteBtn.style.opacity = '0';
+                muteBtn.style.pointerEvents = 'none';
+            }
         });
 
         // Keyboard support
@@ -394,6 +414,16 @@
         // Initialize
         updateDialUI();
         startBeepInterval();
+
+        // Periodically check AudioContext state for silent mode changes
+        // This will detect when the user turns off silent mode
+        setInterval(() => {
+            if (audioCtx && audioCtx.state === 'suspended' && isAudioStarted) {
+                // AudioContext has been suspended (likely due to silent mode being re-enabled)
+                console.log('AudioContext suspended - silent mode may be enabled');
+                // Could add a visual indicator here if desired
+            }
+        }, 2000);
     </script>
 </body>
 </html>
