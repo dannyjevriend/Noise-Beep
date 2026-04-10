@@ -185,9 +185,10 @@
 
             try {
                 // Create AudioContext on user gesture
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass({ latencyHint: 'interactive' });
                 
-                // Immediately resume for iOS
+                // Immediately resume for iOS - MUST be done before creating nodes
                 if (audioCtx.state === 'suspended') {
                     await audioCtx.resume();
                 }
@@ -208,6 +209,8 @@
                 noiseNode = audioCtx.createBufferSource();
                 noiseNode.buffer = buffer;
                 noiseNode.loop = true;
+                // Start AFTER all properties are set
+                noiseNode.start();
                 
                 noiseGain = audioCtx.createGain();
                 noiseGain.gain.value = 0;
@@ -219,7 +222,6 @@
                 noiseNode.connect(noiseFilter);
                 noiseFilter.connect(noiseGain);
                 noiseGain.connect(masterGain);
-                noiseNode.start();
 
                 beepGain = audioCtx.createGain();
                 beepGain.gain.value = 0;
