@@ -225,10 +225,10 @@
                 beepGain.gain.value = 0;
                 beepGain.connect(masterGain);
 
+                // Set isAudioStarted ONLY after all nodes are ready
                 isAudioStarted = true;
-                muteBtn.textContent = 'Mute';
                 
-                // If we successfully started, update UI
+                // Update UI
                 updateAudio();
             } catch (e) {
                 console.error('Audio init error:', e);
@@ -323,15 +323,9 @@
 
         // Start button handler
         muteBtn.addEventListener('click', async () => {
-            initAudio();
+            await initAudio();
             
-            isAudioStarted = true;
-            
-            if (noiseNode && audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-                noiseNode.start();
-            }
-            
+            // The UI updates are now handled inside initAudio or after it completes
             muteBtn.textContent = 'AUDIO STARTED';
             muteBtn.style.opacity = '0';
             muteBtn.style.pointerEvents = 'none';
