@@ -184,8 +184,14 @@
             if (audioCtx) return;
 
             try {
+                // Create AudioContext on user gesture
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
+                // Immediately resume for iOS
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
+
                 masterGain = audioCtx.createGain();
                 masterGain.gain.value = 0.5;
                 masterGain.connect(audioCtx.destination);
@@ -219,11 +225,11 @@
                 beepGain.gain.value = 0;
                 beepGain.connect(masterGain);
 
-                if (audioCtx.state === 'suspended') {
-                    await audioCtx.resume();
-                }
                 isAudioStarted = true;
                 muteBtn.textContent = 'Mute';
+                
+                // If we successfully started, update UI
+                updateAudio();
             } catch (e) {
                 console.error('Audio init error:', e);
             }
